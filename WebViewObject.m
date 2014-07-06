@@ -1,0 +1,205 @@
+//
+//  WebViewObject.m
+//  MultiWebExplorer
+//
+//  Created by gungor on 6/24/14.
+//  Copyright (c) 2014 gungor. All rights reserved.
+//
+
+#import "WebViewObject.h"
+#import "LoadController.h"
+#import "TranslationController.h"
+
+@implementation WebViewObject
+
+
+-(id)initComponent:(ViewController *) controller :(float) x:(float) y:(float) width:(float) height
+{
+    self.mainController = controller;
+    [self addComponents:x :y :width :height];
+    [self attachActions];
+    return self;
+}
+
+-(void)addComponents :(float) x:(float) y:(float) width:(float) height{
+    
+    
+    UIView *vw = [[UIView alloc] initWithFrame:CGRectMake(x,y, width, height)  ];
+        [[vw layer] setBorderColor:[[UIColor colorWithRed:0.8 green:0.8 blue:0.8 alpha:1] CGColor]];
+        [[vw layer] setBorderWidth:1];
+    [vw setBackgroundColor:[UIColor whiteColor]];
+    [vw setClearsContextBeforeDrawing:NO];
+
+    [vw setTintColor:[UIColor blackColor]];
+    self.container = vw;
+    self.view = vw;
+    
+    
+    
+    UIWebView *webView =  [[UIWebView alloc] initWithFrame:CGRectMake(0, 30, width, height-30) ];
+    [[webView layer] setBorderColor:
+     [[UIColor colorWithRed:0.8 green:0.8 blue:0.8 alpha:1] CGColor]];
+    [[webView layer] setBorderWidth:1];
+    [webView setBackgroundColor:[UIColor clearColor]];
+    webView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight );
+    webView.opaque = NO;
+    webView.delegate = self;
+    
+    self.webView = webView;
+    [vw addSubview:webView];
+    
+    UITextField *textField = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, width - 170 , 31) ];
+    [[textField layer] setBorderColor:
+     [[UIColor colorWithRed:0.8 green:0.8 blue:0.8 alpha:1] CGColor]];
+    [[textField layer] setBorderWidth:1];
+    textField.autoresizingMask = (UIViewAutoresizingFlexibleWidth );
+    textField.layer.zPosition = 2.0f;
+    self.textField = textField;
+    [vw addSubview:textField];
+    
+    self.autoCompleter = [[AutocompletionTableView alloc] initWithTextField:self.textField  :self.container : self.webView ] ;
+    [self.textField addTarget:self.autoCompleter action:@selector(textFieldValueChanged:) forControlEvents:UIControlEventEditingChanged];
+    
+    UIButton *goButton = [[UIButton alloc] initWithFrame:CGRectMake(textField.bounds.size.width , 0, 30 , 30) ];
+    [goButton setTitle:@"Go" forState:UIControlStateNormal];
+    [goButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    goButton.layer.backgroundColor = [[UIColor colorWithRed:0.0f green:122.0f/255.0f blue:1.0f alpha:1.0f ] CGColor];
+    goButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    self.goButton = goButton;
+    [vw addSubview:goButton];
+    
+    UIButton *backButton = [[UIButton alloc] initWithFrame:CGRectMake(textField.bounds.size.width + goButton.bounds.size.width + 20  , 0, 22 , 30) ];
+    [backButton setBackgroundImage:[UIImage imageNamed:@"back.png"] forState:UIControlStateNormal];
+    backButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    self.backButton = backButton;
+    [vw addSubview:backButton];
+    
+    UIButton *forwardButton = [[UIButton alloc] initWithFrame:CGRectMake(textField.bounds.size.width + goButton.bounds.size.width + backButton.bounds.size.width + 40, 0, 22 , 30) ];
+    [forwardButton setBackgroundImage:[UIImage imageNamed:@"forward.png"] forState:UIControlStateNormal];
+    forwardButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    self.forwardButton = forwardButton;
+    [vw addSubview:forwardButton];
+    
+    
+    UIButton *rotateButtonCW = [[UIButton alloc] initWithFrame:CGRectMake(textField.bounds.size.width + goButton.bounds.size.width + backButton.bounds.size.width + forwardButton.bounds.size.width + 60, 0, 30 , 30) ];
+    [rotateButtonCW setBackgroundImage:[UIImage imageNamed:@"rotate1.png"] forState:UIControlStateNormal];
+    rotateButtonCW.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    self.rotateButtonCW = rotateButtonCW;
+    
+    [vw addSubview:rotateButtonCW];
+    
+    UIButton *rotateButtonCCW = [[UIButton alloc] initWithFrame:CGRectMake(textField.bounds.size.width + goButton.bounds.size.width + backButton.bounds.size.width + forwardButton.bounds.size.width + 60, 0, 30 , 30) ];
+    [rotateButtonCCW setBackgroundImage:[UIImage imageNamed:@"rotate2.png"] forState:UIControlStateNormal];
+    rotateButtonCCW.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    self.rotateButtonCCW = rotateButtonCCW;
+    rotateButtonCCW.hidden = YES;
+    [vw addSubview:rotateButtonCCW];
+}
+
+-(void)attachActions{
+    [self.rotateButtonCW addTarget:self action:@selector(rotateClockwise:)forControlEvents:UIControlEventTouchUpInside];
+    [self.rotateButtonCCW addTarget:self action:@selector(rotateCounterClockwise:)forControlEvents:UIControlEventTouchUpInside];
+    [self.goButton addTarget:self action:@selector(loadUrl:)forControlEvents:UIControlEventTouchUpInside];
+    [self.textField addTarget:self action:@selector(textTouched:)forControlEvents:UIControlEventTouchDown];
+    
+    [self.backButton addTarget:self action:@selector(backButton:)forControlEvents:UIControlEventTouchUpInside];
+    [self.forwardButton addTarget:self action:@selector(forwardButton:)forControlEvents:UIControlEventTouchUpInside];
+    
+    
+    UILongPressGestureRecognizer* gr = [ [UILongPressGestureRecognizer alloc] initWithTarget: self.mainController action: @selector( onShowMenu: ) ];
+    gr.delegate = self.mainController;
+    [self.webView addGestureRecognizer: gr];
+
+}
+
+- (IBAction)rotateClockwise:(UIButton *)sender {
+    
+    [self.view endEditing:YES];
+    [UIView beginAnimations:@"" context:nil];
+    [UIView setAnimationDuration:1];
+    
+    self.container.bounds = CGRectMake(0, 0, self.container.bounds.size.height, self.container.bounds.size.width);
+    self.container.transform = CGAffineTransformMakeRotation(M_PI/2);
+    self.rotateButtonCW.hidden = YES;
+    self.rotateButtonCCW.hidden = NO;
+    
+    [[UIApplication sharedApplication] setStatusBarOrientation:UIDeviceOrientationLandscapeLeft animated:YES];
+    [UIView commitAnimations];
+}
+
+- (IBAction)rotateCounterClockwise:(UIButton *)sender {
+    
+    [self.view endEditing:YES];
+    [UIView beginAnimations:@"" context:nil];
+    [UIView setAnimationDuration:1];
+    
+    self.container.bounds = CGRectMake(0, 0, self.container.bounds.size.height, self.container.bounds.size.width);
+    self.container.transform = CGAffineTransformMakeRotation(0);
+    self.rotateButtonCW.hidden = NO;
+    self.rotateButtonCCW.hidden = YES;
+    
+    [[UIApplication sharedApplication] setStatusBarOrientation:UIDeviceOrientationPortrait animated:YES];
+    [UIView commitAnimations];
+}
+
+- (IBAction)loadUrl:(id)sender {
+    [self load:self.textField.text : self.webView : self.progress];
+}
+
+-(void)load: (NSString *)theString : (UIWebView *)webView : (UIProgressView *)progressView {
+    [self closeSuggestions];
+    NSURLRequest *req = [NSURLRequest requestWithURL:[NSURL URLWithString:theString]];
+    LoadController *loadController = [[LoadController alloc] initWithNibName:nil bundle:nil];
+    loadController.progView = progressView;
+    loadController.webView = webView;
+    
+    NSURLConnection *conn = [[NSURLConnection alloc] initWithRequest:req delegate:loadController];
+}
+
+- (void)closeSuggestions{
+    [self.autoCompleter hideOptionsView];
+}
+
+- (IBAction)textTouched:(id)sender {
+    [self.view endEditing:YES];
+}
+
+- (IBAction)tapScreen:(id)sender {
+    [self closeSuggestions];
+}
+
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+    return YES;
+}
+
+// This function is called on all location change :
+- (BOOL)webView:(UIWebView *)webView2 shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
+    
+    // Intercept custom location change, URL begins with "js-call:"
+    if ([[[request URL] absoluteString] hasPrefix:@"js-call:"]) {
+        NSArray *components = [[[request URL] absoluteString] componentsSeparatedByString:@":"];
+        NSString *function = [components objectAtIndex:1];
+        
+        NSString *sourceString = [function stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+        
+        [[TranslationController instance] showTranslation:sourceString];
+        
+        return NO;
+    }
+    
+    // Accept this location change
+    return YES;
+    
+}
+
+-(UIView *) getView
+{
+    return self.container;
+}
+
+
+
+
+@end
