@@ -21,29 +21,15 @@
 #pragma mark - Initialization
 - (UITableView *)initWithTextField:(UITextField *)textField : (UIView *) container : (UIWebView *) webView ;
 {
-    
-    NSMutableDictionary *options = [NSMutableDictionary dictionaryWithCapacity:2];
-    [options setValue:[NSNumber numberWithBool:YES] forKey:@"ACOCaseSensitive"];
-    [options setValue:nil forKey:@"ACOUseSourceFont"];
-    //set the options first
-    self.options = options;
-    
-    // frame must align to the textfield
     CGRect frame = CGRectMake(textField.frame.origin.x+1, textField.frame.origin.y+textField.frame.size.height, textField.frame.size.width-1, 120);
 
-    // save the font info to reuse in cells
     self.font = textField.font;
-    
-    self = [super initWithFrame:frame
-                          style:UITableViewStylePlain];
-    
-    
+    self = [super initWithFrame:frame style:UITableViewStylePlain];
     
     self.delegate = self;
     self.dataSource = self;
     self.scrollEnabled = YES;
     
-    // turn off standard correction
     textField.autocorrectionType = UITextAutocorrectionTypeNo;
     
     // to get rid of "extra empty cell" on the bottom
