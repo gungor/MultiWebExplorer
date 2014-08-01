@@ -12,6 +12,7 @@
 
 @implementation WebViewObject
 
+ViewPosition position;
 
 -(id)initComponent:(ViewController *) controller :(float) x:(float) y:(float) width:(float) height
 {
@@ -48,7 +49,7 @@
     self.webView = webView;
     [vw addSubview:webView];
     
-    UITextField *textField = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, width - 170 , 31) ];
+    UITextField *textField = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, width - 200 , 31) ];
     [[textField layer] setBorderColor:
      [[UIColor colorWithRed:0.8 green:0.8 blue:0.8 alpha:1] CGColor]];
     [[textField layer] setBorderWidth:1];
@@ -94,6 +95,16 @@
     self.rotateButtonCCW = rotateButtonCCW;
     rotateButtonCCW.hidden = YES;
     [vw addSubview:rotateButtonCCW];
+    
+    UIButton *hideButton = [[UIButton alloc] initWithFrame:CGRectMake(textField.bounds.size.width + goButton.bounds.size.width + backButton.bounds.size.width + forwardButton.bounds.size.width + rotateButtonCW.bounds.size.width + 80, 0, 10 , 30) ];
+    [hideButton setTitle:@"-" forState:UIControlStateNormal];
+    [hideButton setTitleColor:[UIColor grayColor] forState:UIControlStateNormal];
+    [hideButton setBackgroundColor:[UIColor whiteColor]];
+    hideButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    self.hideButton = hideButton;
+    [vw addSubview:hideButton];
+    
+    position = NORMAL;
 }
 
 -(void)attachActions{
@@ -101,6 +112,7 @@
     [self.rotateButtonCCW addTarget:self action:@selector(rotateCounterClockwise:)forControlEvents:UIControlEventTouchUpInside];
     [self.goButton addTarget:self action:@selector(loadUrl:)forControlEvents:UIControlEventTouchUpInside];
     [self.textField addTarget:self action:@selector(textTouched:)forControlEvents:UIControlEventTouchDown];
+    
     
     [self.backButton addTarget:self action:@selector(backButton:)forControlEvents:UIControlEventTouchUpInside];
     [self.forwardButton addTarget:self action:@selector(forwardButton:)forControlEvents:UIControlEventTouchUpInside];
@@ -113,6 +125,8 @@
 }
 
 - (IBAction)rotateClockwise:(UIButton *)sender {
+    
+    position = ROTATED;
     
     [self.view endEditing:YES];
     [UIView beginAnimations:@"" context:nil];
@@ -128,6 +142,8 @@
 }
 
 - (IBAction)rotateCounterClockwise:(UIButton *)sender {
+    
+    position = NORMAL;
     
     [self.view endEditing:YES];
     [UIView beginAnimations:@"" context:nil];
@@ -199,6 +215,22 @@
     return self.container;
 }
 
+-(Boolean) isOwnerOfWebView: (UIWebView *) webView
+{
+    return self.webView == webView;
+}
+
+- (void) changePosition: (UIView *) translationPanel
+{
+    if( position == ROTATED )
+    {
+        translationPanel.bounds = CGRectMake(0, 0, translationPanel.bounds.size.width, translationPanel.bounds.size.height);
+        translationPanel.transform = CGAffineTransformMakeRotation(M_PI/2);
+    }else{
+        translationPanel.bounds = CGRectMake(0, 0, translationPanel.bounds.size.width, translationPanel.bounds.size.height);
+        translationPanel.transform = CGAffineTransformMakeRotation(0);
+    }
+}
 
 
 

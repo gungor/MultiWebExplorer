@@ -11,7 +11,12 @@
 
 @interface WebViewObject : UIViewController<AutocompletionTableViewDelegate,UIGestureRecognizerDelegate>
 
--(id)initComponent:(ViewController *) controller:(float) x:(float) y:(float) width:(float) height;
+typedef enum viewPositions
+{
+    NORMAL,
+    ROTATED
+} ViewPosition;
+
 
 @property (weak, nonatomic) ViewController *mainController;
 
@@ -24,10 +29,15 @@
 @property (weak, nonatomic) UIProgressView *progress;
 @property (weak, nonatomic) UIButton *rotateButtonCW;
 @property (weak, nonatomic) UIButton *rotateButtonCCW;
+@property (weak, nonatomic) UIButton *hideButton;
 
 @property (weak, nonatomic) AutocompletionTableView *autoCompleter;
 
-- (void)closeSuggestions;
+-(id)initComponent:(ViewController *) controller:(float) x:(float) y:(float) width:(float) height;
+-(void)closeSuggestions;
+-(void)changePosition: (UIView *) translationPanel;
 -(UIView *) getView;
+-(Boolean) isOwnerOfWebView: (UIWebView *) webView;
+
 
 @end

@@ -30,7 +30,7 @@ static TranslationController *instance;
     return self.translationPanel;
 }
 
--(void)setSource: (UIWebView *)src
+-(void)setSource: (WebViewObject *)src
 {
     self.src = src;
 }
@@ -38,7 +38,7 @@ static TranslationController *instance;
 -(void)translate
 {
     NSString *jsFunctionText = @" var text = window.getSelection(); var iframe = document.createElement('IFRAME'); iframe.setAttribute('src', 'js-call:'+text);   document.documentElement.appendChild(iframe); iframe.parentNode.removeChild(iframe); iframe = null;  ";
-    [self.src stringByEvaluatingJavaScriptFromString:jsFunctionText];
+    [self.src.webView stringByEvaluatingJavaScriptFromString:jsFunctionText];
 }
 
 -(void)showTranslation:  (NSString *) sourceString;
@@ -89,6 +89,9 @@ static TranslationController *instance;
     [self.translationPanel addSubview:translateButton];
     [[self.translationPanel layer] setBorderColor:[[UIColor colorWithRed:0.8 green:0.8 blue:0.8 alpha:1] CGColor]];
     [[self.translationPanel layer] setBorderWidth:1];
+    
+    [self.src changePosition: self.translationPanel];
+    
     self.translationPanel.hidden = NO;
 }
 
@@ -127,8 +130,6 @@ static TranslationController *instance;
 
 -(void)translateFromText:(UIButton *)sender
 {
-    NSLog(@" Translate text : %@ ", self.textarea.text );
-    
     [self showTranslation:self.textarea.text];
 }
 

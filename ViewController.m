@@ -58,7 +58,15 @@
 {
     if( sender.state == UIGestureRecognizerStateEnded )
     {
-        [[TranslationController instance] setSource:sender.view];
+        WebViewObject* sourceWebViewObject = nil;
+        for (WebViewObject* obj in self.components) {
+            if( [obj isOwnerOfWebView:sender.view] )
+            {
+                sourceWebViewObject = obj;
+                break;
+            }
+        }
+        [[TranslationController instance] setSource:sourceWebViewObject];
         [sender.view becomeFirstResponder];
         UIMenuController* mc = [UIMenuController sharedMenuController];
         [mc setTargetRect: sender.view.frame inView: sender.view.superview];

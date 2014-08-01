@@ -22,7 +22,6 @@
 
     NSString *str = [regex stringByReplacingMatchesInString: [data text] options:0 range:NSMakeRange(0,[[data text] length]) withTemplate: @"," ];
     
-    
     NSData *jsonData = [str dataUsingEncoding:NSUTF8StringEncoding];
     
     

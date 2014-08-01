@@ -8,17 +8,18 @@
 
 #import <Foundation/Foundation.h>
 #import "ViewController.h"
+#import "WebViewObject.h"
 
 @interface TranslationController : UIViewController
 
 @property (strong, nonatomic) UIView *translationPanel;
-@property (strong, nonatomic) UIWebView *src;
+@property (strong, nonatomic) WebViewObject *src;
 @property (strong, nonatomic) UITextView *textarea;
 
 
 -(id) initComponents: (float) x : (float) y ;
 -(UIView *) getView;
--(void)setSource: (UIWebView *)src;
+-(void)setSource: (WebViewObject *)src;
 -(void)translate;
 -(void)showTranslation:  (NSString *) sourceString;
 +(TranslationController* )instance;
