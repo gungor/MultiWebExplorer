@@ -9,6 +9,7 @@
 #import "WebViewObject.h"
 #import "LoadController.h"
 #import "TranslationController.h"
+#import "Utility.h"
 
 @implementation WebViewObject
 
@@ -26,16 +27,13 @@ ViewPosition position;
     
     
     UIView *vw = [[UIView alloc] initWithFrame:CGRectMake(x,y, width, height)  ];
-        [[vw layer] setBorderColor:[[UIColor colorWithRed:0.8 green:0.8 blue:0.8 alpha:1] CGColor]];
-        [[vw layer] setBorderWidth:1];
+    [[vw layer] setBorderColor:[[UIColor colorWithRed:0.8 green:0.8 blue:0.8 alpha:1] CGColor]];
+    [[vw layer] setBorderWidth:1];
     [vw setBackgroundColor:[UIColor whiteColor]];
-    [vw setClearsContextBeforeDrawing:NO];
 
     [vw setTintColor:[UIColor blackColor]];
     self.container = vw;
     self.view = vw;
-    
-    
     
     UIWebView *webView =  [[UIWebView alloc] initWithFrame:CGRectMake(0, 30, width, height-30) ];
     [[webView layer] setBorderColor:
@@ -49,7 +47,7 @@ ViewPosition position;
     self.webView = webView;
     [vw addSubview:webView];
     
-    UITextField *textField = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, width - 200 , 31) ];
+    UITextField *textField = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, width - 220 , 31) ];
     [[textField layer] setBorderColor:
      [[UIColor colorWithRed:0.8 green:0.8 blue:0.8 alpha:1] CGColor]];
     [[textField layer] setBorderWidth:1];
@@ -96,13 +94,21 @@ ViewPosition position;
     rotateButtonCCW.hidden = YES;
     [vw addSubview:rotateButtonCCW];
     
-    UIButton *hideButton = [[UIButton alloc] initWithFrame:CGRectMake(textField.bounds.size.width + goButton.bounds.size.width + backButton.bounds.size.width + forwardButton.bounds.size.width + rotateButtonCW.bounds.size.width + 80, 0, 10 , 30) ];
-    [hideButton setTitle:@"-" forState:UIControlStateNormal];
-    [hideButton setTitleColor:[UIColor grayColor] forState:UIControlStateNormal];
+    UIButton *hideButton = [[UIButton alloc] initWithFrame:CGRectMake(textField.bounds.size.width + goButton.bounds.size.width + backButton.bounds.size.width + forwardButton.bounds.size.width + rotateButtonCW.bounds.size.width + 80, 0, 30 , 30) ];
+    [hideButton setBackgroundImage:[UIImage imageNamed:@"hide.png"] forState:UIControlStateNormal];
     [hideButton setBackgroundColor:[UIColor whiteColor]];
     hideButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
     self.hideButton = hideButton;
     [vw addSubview:hideButton];
+    
+    
+    UIButton *multiplyButton = [[UIButton alloc] initWithFrame:CGRectMake(textField.bounds.size.width + goButton.bounds.size.width + backButton.bounds.size.width + forwardButton.bounds.size.width + rotateButtonCW.bounds.size.width + 80, 0, 30 , 30) ];
+    [multiplyButton setBackgroundImage:[UIImage imageNamed:@"multiply.png"] forState:UIControlStateNormal];
+    [multiplyButton setBackgroundColor:[UIColor whiteColor]];
+    multiplyButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    self.multiplyButton = multiplyButton;
+    multiplyButton.hidden = YES;
+    [vw addSubview:multiplyButton];
     
     position = NORMAL;
 }
@@ -114,9 +120,10 @@ ViewPosition position;
     [self.textField addTarget:self action:@selector(textTouched:)forControlEvents:UIControlEventTouchDown];
     
     
-    [self.backButton addTarget:self action:@selector(backButton:)forControlEvents:UIControlEventTouchUpInside];
-    [self.forwardButton addTarget:self action:@selector(forwardButton:)forControlEvents:UIControlEventTouchUpInside];
-    
+    [self.backButton addTarget:self action:@selector(back:)forControlEvents:UIControlEventTouchUpInside];
+    [self.forwardButton addTarget:self action:@selector(forward:)forControlEvents:UIControlEventTouchUpInside];
+    [self.hideButton addTarget:self.mainController action:@selector(hide:)forControlEvents:UIControlEventTouchUpInside];
+    [self.multiplyButton addTarget:self.mainController action:@selector(show:)forControlEvents:UIControlEventTouchUpInside];
     
     UILongPressGestureRecognizer* gr = [ [UILongPressGestureRecognizer alloc] initWithTarget: self.mainController action: @selector( onShowMenu: ) ];
     gr.delegate = self.mainController;
@@ -158,22 +165,40 @@ ViewPosition position;
     [UIView commitAnimations];
 }
 
+- (void)hide
+{
+    self.container.hidden = YES;
+}
+
+- (void)show
+{
+    NSLog(@" Show Run.. ");
+    self.container.hidden = NO;
+}
+
 - (IBAction)loadUrl:(id)sender {
-    [self load:self.textField.text : self.webView : self.progress];
+    [self load: [Utility checkUrl:self.textField.text]  : self.webView : self.progress];
 }
 
 -(void)load: (NSString *)theString : (UIWebView *)webView : (UIProgressView *)progressView {
     [self closeSuggestions];
     NSURLRequest *req = [NSURLRequest requestWithURL:[NSURL URLWithString:theString]];
-    LoadController *loadController = [[LoadController alloc] initWithNibName:nil bundle:nil];
-    loadController.progView = progressView;
-    loadController.webView = webView;
+    [webView loadRequest:req];
     
-    NSURLConnection *conn = [[NSURLConnection alloc] initWithRequest:req delegate:loadController];
 }
 
 - (void)closeSuggestions{
     [self.autoCompleter hideOptionsView];
+}
+
+- (IBAction)back:(id)sender {
+    if( [self.webView canGoBack] )
+        [self.webView goBack];
+}
+
+- (IBAction)forward:(id)sender {
+    if( [self.webView canGoForward] )
+        [self.webView goForward];
 }
 
 - (IBAction)textTouched:(id)sender {
@@ -215,9 +240,27 @@ ViewPosition position;
     return self.container;
 }
 
--(Boolean) isOwnerOfWebView: (UIWebView *) webView
+-(Boolean) isOwnerOfWebView: (id) child
 {
-    return self.webView == webView;
+    if( [child class] == [UIWebView class] )
+    {
+        return self.webView == child;
+    }
+    
+    if( [child class] == [UIButton class] )
+    {
+        if( self.hideButton == child )
+        {
+            return true;
+        }
+        
+        if( self.multiplyButton == child )
+        {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 - (void) changePosition: (UIView *) translationPanel
@@ -232,6 +275,22 @@ ViewPosition position;
     }
 }
 
+- (void)webViewDidFinishLoad:(UIWebView *)webView {
+    NSLog(@" Load F,nished ");
+}
 
+- (void)webViewDidStartLoad:(UIWebView *)webView {
+    NSLog(@" Load Started ");
+}
+
+- (void)changeToSingleView {
+    self.multiplyButton.hidden = NO;
+    self.hideButton.hidden = YES;
+}
+
+- (void)changeToMultipleView {
+    self.multiplyButton.hidden = YES;
+    self.hideButton.hidden = NO;
+}
 
 @end

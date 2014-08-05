@@ -51,6 +51,8 @@
     UIMenuController *menu = [UIMenuController sharedMenuController];
     menu.menuItems = [NSArray arrayWithObject:translateAction];
     [menu update];
+    
+    NSLog(@" DIDLOAD %u %u ", webviewObject.container.hidden, webviewObject.container.hidden );
 }
 
 //Runs when menu appears
@@ -86,6 +88,73 @@
     {
         [((WebViewObject*)[self.components objectAtIndex:i]) closeSuggestions];
     }
+}
+
+- (IBAction)hide:(UIButton *)sender {
+    WebViewObject* sourceWebViewObject = nil;
+    for (WebViewObject* obj in self.components) {
+        if( [obj isOwnerOfWebView:sender] )
+        {
+            sourceWebViewObject = obj;
+            break;
+        }
+    }
+    
+    [sourceWebViewObject hide];
+    [self adjustComponents];
+}
+
+- (IBAction)show:(UIButton *)sender {
+    WebViewObject* sourceWebViewObject = nil;
+    for (WebViewObject* obj in self.components) {
+        if( ![obj isOwnerOfWebView:sender] )
+        {
+            sourceWebViewObject = obj;
+            break;
+        }
+    }
+    
+    NSLog(@"show view controller");
+    NSLog(@" %@ ", sourceWebViewObject );
+    
+    [sourceWebViewObject show];
+    [self adjustComponents];
+}
+
+- (void) adjustComponents
+{
+    CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
+    CGFloat screenHeight = [UIScreen mainScreen].bounds.size.height-30;
+    
+    WebViewObject* firstWebObject = [self.components objectAtIndex:0];
+    WebViewObject* secondWebObject = [self.components objectAtIndex:1];
+    
+    [UIView beginAnimations:@"" context:nil];
+    [UIView setAnimationDuration:0.5];
+    
+    if( firstWebObject.container.hidden == YES && secondWebObject.container.hidden == NO )
+    {
+        secondWebObject.container.frame = CGRectMake(30.0f, 30.0f, secondWebObject.container.bounds.size.width, screenHeight-10);
+        [secondWebObject changeToSingleView];
+    }
+    else if( firstWebObject.container.hidden == NO && secondWebObject.container.hidden == YES )
+    {
+        firstWebObject.container.frame = CGRectMake(30.0f, 30.0f, firstWebObject.container.bounds.size.width, screenHeight-10);
+        [firstWebObject changeToSingleView];
+    }
+    
+    NSLog(@" %u %u ", firstWebObject.container.hidden, secondWebObject.container.hidden );
+    
+    if( firstWebObject.container.hidden == NO && secondWebObject.container.hidden == NO ){
+        
+        firstWebObject.container.frame = CGRectMake(30.0f, 30.0f, screenWidth-60,screenHeight/2-10);
+        secondWebObject.container.frame = CGRectMake(30.0f, screenHeight/2+30,screenWidth-60,screenHeight/2-10);
+        
+        [firstWebObject changeToMultipleView];
+        [secondWebObject changeToMultipleView];
+    }
+    
+    [UIView commitAnimations];
 }
 
 //Overriding 'shouldReceiveTouch' is required when different actions are taken according to the tapped component.

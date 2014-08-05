@@ -30,6 +30,7 @@ typedef enum viewPositions
 @property (weak, nonatomic) UIButton *rotateButtonCW;
 @property (weak, nonatomic) UIButton *rotateButtonCCW;
 @property (weak, nonatomic) UIButton *hideButton;
+@property (weak, nonatomic) UIButton *multiplyButton;
 
 @property (weak, nonatomic) AutocompletionTableView *autoCompleter;
 
@@ -38,6 +39,9 @@ typedef enum viewPositions
 -(void)changePosition: (UIView *) translationPanel;
 -(UIView *) getView;
 -(Boolean) isOwnerOfWebView: (UIWebView *) webView;
-
+- (void)hide;
+- (void)show;
+- (void)changeToSingleView;
+- (void)changeToMultipleView;
 
 @end
