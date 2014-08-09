@@ -32,8 +32,6 @@
     
     textField.autocorrectionType = UITextAutocorrectionTypeNo;
     
-    // to get rid of "extra empty cell" on the bottom
-    // when there's only one cell in the table
     UIView *v = [[UIView alloc] initWithFrame:CGRectMake(0, 0, textField.frame.size.width, 1)];
     v.backgroundColor = [UIColor clearColor];
     v.layer.zPosition = 2.0f;
@@ -44,8 +42,6 @@
     self.hidden = YES;
     self.autoresizingMask = (UIViewAutoresizingFlexibleWidth);
     self.webView = webView;
-    
-    //self.textField2.layer.zPosition = 2.0f;
     
     [container addSubview:self];
     

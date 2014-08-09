@@ -11,13 +11,17 @@
 #import "TranslationController.h"
 #import "Utility.h"
 
+
 @implementation WebViewObject
 
-ViewPosition position;
+
+ViewController *mainController;
+ViewStateController *viewAdjuster;
+
 
 -(id)initComponent:(ViewController *) controller :(float) x:(float) y:(float) width:(float) height
 {
-    self.mainController = controller;
+    mainController = controller;
     [self addComponents:x :y :width :height];
     [self attachActions];
     return self;
@@ -110,7 +114,8 @@ ViewPosition position;
     multiplyButton.hidden = YES;
     [vw addSubview:multiplyButton];
     
-    position = NORMAL;
+    viewAdjuster = [[ViewStateController alloc] init];
+    
 }
 
 -(void)attachActions{
@@ -122,58 +127,33 @@ ViewPosition position;
     
     [self.backButton addTarget:self action:@selector(back:)forControlEvents:UIControlEventTouchUpInside];
     [self.forwardButton addTarget:self action:@selector(forward:)forControlEvents:UIControlEventTouchUpInside];
-    [self.hideButton addTarget:self.mainController action:@selector(hide:)forControlEvents:UIControlEventTouchUpInside];
-    [self.multiplyButton addTarget:self.mainController action:@selector(show:)forControlEvents:UIControlEventTouchUpInside];
+    [self.hideButton addTarget:mainController action:@selector(hide:)forControlEvents:UIControlEventTouchUpInside];
+    [self.multiplyButton addTarget:mainController action:@selector(show:)forControlEvents:UIControlEventTouchUpInside];
     
-    UILongPressGestureRecognizer* gr = [ [UILongPressGestureRecognizer alloc] initWithTarget: self.mainController action: @selector( onShowMenu: ) ];
-    gr.delegate = self.mainController;
+    UILongPressGestureRecognizer* gr = [ [UILongPressGestureRecognizer alloc] initWithTarget: mainController action: @selector( onShowMenu: ) ];
+    gr.delegate = mainController;
     [self.webView addGestureRecognizer: gr];
 
 }
 
 - (IBAction)rotateClockwise:(UIButton *)sender {
     
-    position = ROTATED;
-    
-    [self.view endEditing:YES];
-    [UIView beginAnimations:@"" context:nil];
-    [UIView setAnimationDuration:1];
-    
-    self.container.bounds = CGRectMake(0, 0, self.container.bounds.size.height, self.container.bounds.size.width);
-    self.container.transform = CGAffineTransformMakeRotation(M_PI/2);
-    self.rotateButtonCW.hidden = YES;
-    self.rotateButtonCCW.hidden = NO;
-    
-    [[UIApplication sharedApplication] setStatusBarOrientation:UIDeviceOrientationLandscapeLeft animated:YES];
-    [UIView commitAnimations];
+    [viewAdjuster rotateClockwise: self.container : self.rotateButtonCW : self.rotateButtonCCW ];
 }
 
 - (IBAction)rotateCounterClockwise:(UIButton *)sender {
     
-    position = NORMAL;
-    
-    [self.view endEditing:YES];
-    [UIView beginAnimations:@"" context:nil];
-    [UIView setAnimationDuration:1];
-    
-    self.container.bounds = CGRectMake(0, 0, self.container.bounds.size.height, self.container.bounds.size.width);
-    self.container.transform = CGAffineTransformMakeRotation(0);
-    self.rotateButtonCW.hidden = NO;
-    self.rotateButtonCCW.hidden = YES;
-    
-    [[UIApplication sharedApplication] setStatusBarOrientation:UIDeviceOrientationPortrait animated:YES];
-    [UIView commitAnimations];
+    [viewAdjuster rotateCounterClockwise: self.container : self.rotateButtonCW : self.rotateButtonCCW ];
 }
 
 - (void)hide
 {
-    self.container.hidden = YES;
+    [viewAdjuster hide: self.container];
 }
 
 - (void)show
 {
-    NSLog(@" Show Run.. ");
-    self.container.hidden = NO;
+    [viewAdjuster show: self.container];
 }
 
 - (IBAction)loadUrl:(id)sender {
@@ -184,7 +164,6 @@ ViewPosition position;
     [self closeSuggestions];
     NSURLRequest *req = [NSURLRequest requestWithURL:[NSURL URLWithString:theString]];
     [webView loadRequest:req];
-    
 }
 
 - (void)closeSuggestions{
@@ -263,34 +242,22 @@ ViewPosition position;
     return false;
 }
 
-- (void) changePosition: (UIView *) translationPanel
-{
-    if( position == ROTATED )
-    {
-        translationPanel.bounds = CGRectMake(0, 0, translationPanel.bounds.size.width, translationPanel.bounds.size.height);
-        translationPanel.transform = CGAffineTransformMakeRotation(M_PI/2);
-    }else{
-        translationPanel.bounds = CGRectMake(0, 0, translationPanel.bounds.size.width, translationPanel.bounds.size.height);
-        translationPanel.transform = CGAffineTransformMakeRotation(0);
-    }
-}
-
-- (void)webViewDidFinishLoad:(UIWebView *)webView {
-    NSLog(@" Load F,nished ");
-}
-
-- (void)webViewDidStartLoad:(UIWebView *)webView {
-    NSLog(@" Load Started ");
-}
-
 - (void)changeToSingleView {
-    self.multiplyButton.hidden = NO;
-    self.hideButton.hidden = YES;
+    [viewAdjuster changeToSingleView:self.multiplyButton : self.hideButton];
 }
 
 - (void)changeToMultipleView {
-    self.multiplyButton.hidden = YES;
-    self.hideButton.hidden = NO;
+    [viewAdjuster changeToMultipleView:self.multiplyButton : self.hideButton];
+}
+
+- (ViewPosition) getViewPosition
+{
+    return [viewAdjuster getPosition];
+}
+
+- (void) adjustComponents: (NSMutableArray *) components
+{
+    [viewAdjuster adjustComponents:components];
 }
 
 @end

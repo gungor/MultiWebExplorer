@@ -8,17 +8,15 @@
 
 #import <Foundation/Foundation.h>
 #import "ViewController.h"
+#import "ViewStateController.h"
+#import "ViewPosition.h"
 
 @interface WebViewObject : UIViewController<AutocompletionTableViewDelegate,UIGestureRecognizerDelegate>
 
-typedef enum viewPositions
-{
-    NORMAL,
-    ROTATED
-} ViewPosition;
 
 
-@property (weak, nonatomic) ViewController *mainController;
+
+
 
 @property (weak, nonatomic) UIView *container;
 @property (weak, nonatomic) UIWebView *webView;
@@ -32,7 +30,10 @@ typedef enum viewPositions
 @property (weak, nonatomic) UIButton *hideButton;
 @property (weak, nonatomic) UIButton *multiplyButton;
 
+
 @property (weak, nonatomic) AutocompletionTableView *autoCompleter;
+
+
 
 -(id)initComponent:(ViewController *) controller:(float) x:(float) y:(float) width:(float) height;
 -(void)closeSuggestions;
@@ -43,5 +44,8 @@ typedef enum viewPositions
 - (void)show;
 - (void)changeToSingleView;
 - (void)changeToMultipleView;
+- (ViewPosition) getViewPosition;
+- (void) adjustComponents: (NSMutableArray *) components;
+
 
 @end
